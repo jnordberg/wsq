@@ -1,5 +1,5 @@
 
-wsq
+wsq ![travis](https://travis-ci.org/jnordberg/wsq.svg?branch=master)
 ===
 
 Websocket task queue
