@@ -1,0 +1,30 @@
+{
+  "name": "wsq",
+  "version": "0.1.0",
+  "description": "Task queue on top of websockets",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --compilers coffee:coffee-script/register -R tap test",
+    "prepublish": "coffee -b -c -o lib src/*.coffee"
+  },
+  "author": "Johan Nordberg <code@johan-nordberg.com>",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^1.5.0",
+    "dnode": "^1.2.2",
+    "levelup": "^1.3.0",
+    "multiplex": "^6.6.1",
+    "through": "^2.3.8",
+    "websocket-stream": "^2.1.0"
+  },
+  "devDependencies": {
+    "abstract-blob-store": "^3.2.0",
+    "browserify": "^12.0.1",
+    "coffee-coverage": "^0.7.0",
+    "coffee-script": "^1.10.0",
+    "coffeeify": "^1.2.0",
+    "istanbul": "^0.4.1",
+    "memdown": "^1.1.0",
+    "mocha": "^2.3.4"
+  }
+}
