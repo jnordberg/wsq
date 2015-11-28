@@ -30,6 +30,7 @@
     "coveralls": "^2.11.4",
     "istanbul": "^0.4.1",
     "memdown": "^1.1.0",
-    "mocha": "^2.3.4"
+    "mocha": "^2.3.4",
+    "uglifyjs": "^2.4.10"
   }
 }

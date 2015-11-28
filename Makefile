@@ -15,6 +15,7 @@ coverage: node_modules
 .PHONY: client
 client: node_modules
 	browserify -t coffeeify --extension .coffee -s wsq -o dist/client.js src/client.coffee
+	cat ./dist/client.js | uglifyjs > ./dist/client.min.js
 
 node_modules:
 	npm install
