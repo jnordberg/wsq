@@ -8,6 +8,10 @@
     "prepublish": "coffee -b -c -o lib src/*.coffee"
   },
   "author": "Johan Nordberg <code@johan-nordberg.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jnordberg/wsq.git"
+  },
   "license": "MIT",
   "dependencies": {
     "async": "^1.5.0",
