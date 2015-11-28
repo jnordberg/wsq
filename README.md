@@ -1,5 +1,5 @@
 
-wsq ![travis](https://travis-ci.org/jnordberg/wsq.svg?branch=master)
+wsq ![travis](https://travis-ci.org/jnordberg/wsq.svg?branch=master) [![Coverage Status](https://coveralls.io/repos/jnordberg/wsq/badge.svg?branch=master&service=github)](https://coveralls.io/github/jnordberg/wsq?branch=master)
 ===
 
 Websocket task queue
