@@ -4,6 +4,7 @@ store = require 'abstract-blob-store'
 
 {Client} = require './../src/client'
 {Server} = require './../src/server'
+{Worker} = require './../src/worker'
 
 assert = require 'assert'
 through = require 'through'
@@ -17,6 +18,7 @@ serverOpts =
   dbOptions: {db}
   socketOptions: {}
   heartbeatInterval: 100
+  workerTimeout: 100
 
 makeServer = (port=4242) ->
   serverOpts.socketOptions.port = port
@@ -273,6 +275,16 @@ describe 'queue', ->
       assert.equal task.error, 'Timed out.'
       done()
 
+  it 'fails task if worker does not respond', (done) ->
+    @slow 400
+    queue = client.queue 'noresponse'
+    worker = Worker.create 'noresponse', -> assert false, 'should not start processing'
+    worker.start = ->
+    client.addWorker worker
+    task = queue.add {foo: 1}, (error) -> assert.ifError error
+    task.on 'failed', (task) ->
+      assert.equal task.error, "Worker #{ worker.id } didn't respond."
+      done()
 
 describe 'server persitence', ->
 
