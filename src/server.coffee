@@ -292,7 +292,7 @@ class Queue extends EventEmitter
       @putTask task, (error) =>
         return callback error if error?
         @server.broadcastEvent 'task started', task.toRPC()
-        timer = setTimeout timedOut, 1000
+        timer = setTimeout timedOut, @server.options.workerTimeout
         worker.start task.toRPC(true), (error) =>
           return unless callback?
           clearTimeout timer
