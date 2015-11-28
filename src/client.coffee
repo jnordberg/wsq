@@ -38,10 +38,10 @@ class Client extends EventEmitter
     throw new Error 'Already connected!' if @socket?
     @socket = new WebSocket @address
     @socket.on 'close', =>
-      if @remote?
-        @onDisconnect()
+      wasOpen = @remote?
       @socket = null
       @remote = null
+      @onDisconnect() if wasOpen
       unless @closed
         delay = @options.backoff @connectionTries++
         setTimeout @connect.bind(this), delay
@@ -59,9 +59,10 @@ class Client extends EventEmitter
   close: ->
     @closed = true
     @socket?.end()
+    wasOpen = @socket?
     @remote = null
     @socket = null
-    @onDisconnect()
+    @onDisconnect() if wasOpen
 
   onConnect: ->
     async.forEach @getFreeWorkers(), (worker, callback) =>
