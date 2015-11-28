@@ -141,11 +141,6 @@ class Queue extends EventEmitter
         return false
       return true
 
-  getWorker: (workerId) ->
-    for worker in @workers when worker.id is workerId
-      return worker
-    return null
-
   removeTask: (task, callback) ->
     if @active[task.id]?
       clearTimeout @timers[task.id]
