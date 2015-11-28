@@ -16,6 +16,7 @@ serverOpts =
   dbLocation: 'nowhere'
   dbOptions: {db}
   socketOptions: {}
+  heartbeatInterval: 100
 
 makeServer = (port=4242) ->
   serverOpts.socketOptions.port = port
@@ -32,6 +33,17 @@ describe 'server', ->
   it 'starts', ->
     server = makeServer()
     server.on 'error', (error) -> assert.ifError error
+
+  it 'should close stream if client does not respond to ping', (done) ->
+    @slow 800
+    cli = new Client 'ws://localhost:4242'
+    cli.on 'connect', ->
+      pongs = 0
+      cli.socket.socket.pong = -> pongs++
+      cli.on 'disconnect', ->
+        assert.equal pongs, 2
+        cli.close()
+        done()
 
 describe 'client', ->
 

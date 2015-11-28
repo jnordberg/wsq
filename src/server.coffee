@@ -43,6 +43,9 @@ class Server extends EventEmitter
     # Blob store instance complying to the "abstract-blob-store" interface, see:
     # https://github.com/maxogden/abstract-blob-store
 
+    heartbeatInterval: 1000 # 1 second
+    # How often to ping clients to keep the connection alive. Set to zero to disable.
+
   requiredOptions = ['dbLocation', 'socketOptions', 'blobStore']
 
   constructor: (options) ->
@@ -325,6 +328,11 @@ class Connection extends EventEmitter
     rpcStream = @multiplex.createSharedStream 'rpc'
     @rpc = dnode @getRpcMethods(), {weak: false}
     @rpc.pipe(rpcStream).pipe(@rpc)
+    if @server.options.heartbeatInterval > 0
+      @pingCounter = 0
+      @stream.socket.on 'pong', => @pingCounter = 0
+      @heartbeatTimer = setInterval @heartbeat, @server.options.heartbeatInterval
+      @heartbeat()
 
   onError: (error) =>
     @cleanup()
@@ -336,8 +344,16 @@ class Connection extends EventEmitter
     @emit 'close'
 
   cleanup: ->
+    clearTimeout @heartbeatTimer
     for workerId, queueName of @seenWorkers
       @server.getQueue(queueName).removeWorker(workerId)
+
+  heartbeat: =>
+    if @pingCounter >= 2
+      @stream.end()
+    else
+      @stream.socket.ping 'ping', {mask: true, binary: true}, true
+      @pingCounter++
 
   getRpcMethods: ->
     rv = {}
