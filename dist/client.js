@@ -24979,12 +24979,13 @@ Client = (function(superClass) {
     this.socket = new WebSocket(this.address);
     this.socket.on('close', (function(_this) {
       return function() {
-        var delay;
-        if (_this.remote != null) {
-          _this.onDisconnect();
-        }
+        var delay, wasOpen;
+        wasOpen = _this.remote != null;
         _this.socket = null;
         _this.remote = null;
+        if (wasOpen) {
+          _this.onDisconnect();
+        }
         if (!_this.closed) {
           delay = _this.options.backoff(_this.connectionTries++);
           return setTimeout(_this.connect.bind(_this), delay);
@@ -25013,14 +25014,17 @@ Client = (function(superClass) {
   };
 
   Client.prototype.close = function() {
-    var ref;
+    var ref, wasOpen;
     this.closed = true;
     if ((ref = this.socket) != null) {
       ref.end();
     }
+    wasOpen = this.socket != null;
     this.remote = null;
     this.socket = null;
-    return this.onDisconnect();
+    if (wasOpen) {
+      return this.onDisconnect();
+    }
   };
 
   Client.prototype.onConnect = function() {
