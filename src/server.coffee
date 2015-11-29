@@ -88,10 +88,9 @@ class Server extends EventEmitter
   handleConnection: (stream) =>
     connection = new Connection stream, this
     connection.id = randomString 24
-    connection.on 'error', (error) =>
-      error.message = "Connection error: #{ error.message }"
-      @emit 'error', error
     @connections[connection.id] = connection
+    connection.on 'close', => delete @connections[connection.id]
+    @emit 'connection', connection
 
   getQueue: (name) ->
     unless @queues[name]?
@@ -129,15 +128,15 @@ class Queue extends EventEmitter
     @active = {}
     @timers = {}
 
-  addWorker: (worker, callback) ->
+  addWorker: (worker) ->
     @workers.push worker
-    @server.broadcastEvent 'worker ready', worker
+    @server.broadcastEvent 'worker added', {id: worker.id, connection: worker.connection}
     setImmediate @process
 
   removeWorker: (workerId) ->
     @workers = @workers.filter (worker) =>
       if worker.id is workerId
-        @server.broadcastEvent 'worker removed', worker
+        @server.broadcastEvent 'worker removed', {id: worker.id, connection: worker.connection}
         return false
       return true
 
@@ -283,13 +282,14 @@ class Queue extends EventEmitter
       task.progress = 0
       task._worker = worker
       @active[task.id] = task
+      @server.broadcastEvent 'task started', task.toRPC()
 
       @putTask task, (error) =>
         return callback error if error?
-        @server.broadcastEvent 'task started', task.toRPC()
         timer = setTimeout timedOut, @server.options.workerTimeout
         worker.start task.toRPC(true), (error) =>
           return unless callback?
+          @server.broadcastEvent 'worker started', {id: worker.id, connection: worker.connection}, task.toRPC()
           clearTimeout timer
           if error?
             @taskFailure task, error
@@ -317,7 +317,7 @@ class Connection extends EventEmitter
     # setup multiplex stream
     @multiplex = multiplex @handleStream.bind(this)
     @stream.pipe(@multiplex).pipe(@stream)
-    @stream.on 'error', -> #...@onError
+    @stream.on 'error', @onError
     @stream.on 'end', @onEnd
     # setup rpc stream via multiplex
     rpcStream = @multiplex.createSharedStream 'rpc'
@@ -375,6 +375,7 @@ class Connection extends EventEmitter
   registerWorker: (worker) ->
     @seenWorkers[worker.id] = worker.queue
     queue = @server.getQueue worker.queue
+    worker.connection = @id
     queue.addWorker worker
 
   taskSuccessful: (task) ->
