@@ -130,13 +130,19 @@ class Queue extends EventEmitter
 
   addWorker: (worker) ->
     @workers.push worker
-    @server.broadcastEvent 'worker added', {id: worker.id, connection: worker.connection}
+    @server.broadcastEvent 'worker added',
+      id: worker.id,
+      connection: worker.connection
+      queue: @name
     setImmediate @process
 
   removeWorker: (workerId) ->
     @workers = @workers.filter (worker) =>
       if worker.id is workerId
-        @server.broadcastEvent 'worker removed', {id: worker.id, connection: worker.connection}
+        @server.broadcastEvent 'worker removed',
+          id: worker.id
+          connection: worker.connection
+          queue: @name
         return false
       return true
 
@@ -289,7 +295,11 @@ class Queue extends EventEmitter
         timer = setTimeout timedOut, @server.options.workerTimeout
         worker.start task.toRPC(true), (error) =>
           return unless callback?
-          @server.broadcastEvent 'worker started', {id: worker.id, connection: worker.connection}, task.toRPC()
+          workerEvent =
+            id: worker.id,
+            connection: worker.connection
+            queue: @name
+          @server.broadcastEvent 'worker started', workerEvent, task.toRPC()
           clearTimeout timer
           if error?
             @taskFailure task, error
