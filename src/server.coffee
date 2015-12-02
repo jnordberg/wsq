@@ -306,6 +306,7 @@ class Connection extends EventEmitter
     'addTask'
     'removeTask'
     'listTasks'
+    'listQueues'
     'registerWorker'
     'taskFailure'
     'taskProgress'
@@ -420,6 +421,9 @@ class Connection extends EventEmitter
         callback new Error "Unknown filter: #{ filter }"
         return
     callback null, tasks.map (task) -> task.toRPC()
+
+  listQueues: (callback) ->
+    callback null, Object.keys @server.queues
 
 
 module.exports = {Server}

@@ -211,6 +211,15 @@ class Client extends EventEmitter
           return rv
       callback error, tasks
 
+  listQueues: (callback) ->
+    unless @remote?
+      @once 'connect', => @listQueues callback
+      return
+    @remote.listQueues (error, result) =>
+      unless error?
+        queues = result.map (name) => @getQueue name
+      callback error, queues
+
 class ClientQueue
   ### Convenience. ###
 
