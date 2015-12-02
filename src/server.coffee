@@ -348,7 +348,7 @@ class Connection extends EventEmitter
     if @pingCounter >= 2
       @stream.end()
     else
-      @stream.socket.ping 'ping', {mask: true, binary: true}, true
+      @stream.socket.ping()
       @pingCounter++
 
   getRpcMethods: ->
