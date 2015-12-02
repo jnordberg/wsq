@@ -31,6 +31,7 @@ class Task extends EventEmitter
     @progress = 0
     @state = 'unknown'
     @aborted = false
+    @_listeners = {}
     for key of defaults
       @options[key] = options[key] ? defaults[key]
 
@@ -44,15 +45,23 @@ class Task extends EventEmitter
         mesure progress but need to keep a long running task alive. ###
     @emit 'local-progress', @progress
 
+  _isLocal: (event) -> event[...5] is 'local' or event is 'abort'
+
+  _setupListener: (event) ->
+    return if @_listeners[event]? or @_isLocal event
+    @_listeners[event] = (task, extra...) =>
+      if task.id is @id
+        @emit event, task, extra...
+      return
+    @client.on "task #{ event }", @_listeners[event]
+
   on: (event, handler) ->
-    if event[...5] is 'local' or event is 'abort'
-      super event, handler
-    else
-      unless @client
-        throw new Error 'No client assigned, can not subscribe to event stream.'
-      @client.on "task #{ event }", (task, extra...) =>
-        if task.id is @id
-          handler task, extra...
+    @_setupListener event
+    super event, handler
+
+  once: (event, handler) ->
+    @_setupListener event
+    super event, handler
 
   remove: (callback) ->
     unless @client
