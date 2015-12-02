@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 .PHONY: test
 test: node_modules
-	@mocha --compilers coffee:coffee-script/register test
+	@mocha --compilers coffee:coffee-script/register --bail test
 
 .PHONY: coverage
 coverage: node_modules
