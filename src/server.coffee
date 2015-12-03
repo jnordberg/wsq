@@ -162,6 +162,19 @@ class Queue extends EventEmitter
       @waiting = @waiting.filter matchFilter
     @delTask task, callback
 
+  retryTask: (task, callback) ->
+    idx = @failed.findIndex (t) -> t.id is task.id
+    if idx is -1
+      callback new Error "Task #{ task.id } not in failed list."
+      return
+
+    task = @failed[idx]
+    @failed.splice idx, 1
+
+    task.retries = 0
+    task.error = undefined
+    @addTask task, callback
+
   emitError: (error) ->
     if error?
       @emit 'error', error
@@ -315,10 +328,11 @@ class Connection extends EventEmitter
 
   RPC_METHODS = [
     'addTask'
-    'removeTask'
-    'listTasks'
     'listQueues'
+    'listTasks'
     'registerWorker'
+    'removeTask'
+    'retryTask'
     'taskFailure'
     'taskProgress'
     'taskSuccessful'
@@ -414,6 +428,11 @@ class Connection extends EventEmitter
     task = Task.fromRPC task
     queue = @server.getQueue task.queue
     queue.removeTask task, callback
+
+  retryTask: (task, callback) ->
+    task = Task.fromRPC task
+    queue = @server.getQueue task.queue
+    queue.retryTask task, callback
 
   listTasks: (queue, filter, callback) ->
     queue = @server.getQueue queue

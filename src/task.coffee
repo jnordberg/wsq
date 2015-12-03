@@ -1,5 +1,6 @@
 ### Shared task implementation. ###
 
+assert = require 'assert'
 {EventEmitter} = require 'events'
 {randomString} = require './common'
 
@@ -49,6 +50,7 @@ class Task extends EventEmitter
 
   _setupListener: (event) ->
     return if @_listeners[event]? or @_isLocal event
+    assert @client?, 'No client assigned'
     @_listeners[event] = (task, extra...) =>
       if task.id is @id
         @emit event, task, extra...
@@ -64,9 +66,10 @@ class Task extends EventEmitter
     super event, handler
 
   remove: (callback) ->
-    unless @client
-      return callback new Error 'No client assigned, can not remote.'
     @client.removeTask this, callback
+
+  retry: (callback) ->
+    @client.retryTask this, callback
 
   toRPC: (includeData=false) ->
     ### Private, used to serialize the task before it is sent over the wire. ###

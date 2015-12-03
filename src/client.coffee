@@ -137,6 +137,12 @@ class Client extends EventEmitter
       return
     @remote.removeTask task.toRPC(), callback
 
+  retryTask: (task, callback=@errorCallback) ->
+    unless @remote?
+      @once 'connect', => @retryTask task, callback
+      return
+    @remote.retryTask task.toRPC(), callback
+
   resolveStreams: (data) ->
     streams = []
     do walk = (data) =>
