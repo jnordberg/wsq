@@ -69,6 +69,15 @@ describe 'client', ->
   it 'throws if already connected', ->
     assert.throws -> client.connect()
 
+  it 'should list active queues', (done) ->
+    client.queue('listme').add {foo: 1}, (error) ->
+      assert.ifError error
+      client.listQueues (error, queues) ->
+        assert.ifError error
+        assert.equal queues.length, 1
+        assert.equal queues[0].name, 'listme'
+        done()
+
 describe 'queue', ->
 
   it 'adds a task', (done) ->
