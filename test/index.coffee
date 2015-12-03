@@ -299,13 +299,13 @@ describe 'server persitence', ->
 describe 'task', ->
 
   it 'emits events', (done) ->
-    queue = client.queue 'test7'
+    queue = client.queue 'test9'
     task = queue.add {a: 1}
     task.on 'queued', -> done()
 
   it 'updates progress', (done) ->
     @slow 300
-    queue = client.queue 'test7'
+    queue = client.queue 'test9'
     sawProgress = false
     queue.waiting (error, tasks) ->
       assert.ifError error
@@ -321,6 +321,35 @@ describe 'task', ->
       task.updateProgress 0.5
       setTimeout cb, 100
       setTimeout callback, 100
+
+  it 'should retry', (done) ->
+    @slow 200
+    queue = client.queue 'test10'
+    numCalls = 0
+    queue.process (task, callback) ->
+      if ++numCalls < 3
+        error = new Error "Fail #{ numCalls }"
+      callback error
+
+    task = queue.add {foo: 1}, {retries: 1}, (error) -> assert.ifError error
+
+    task.on 'completed', (task) ->
+      assert.equal numCalls, 3
+      assert.equal task.error, undefined
+      done()
+
+    task.on 'failed', (task, willRetry) ->
+      if numCalls is 1
+        assert willRetry, 'should retry'
+        assert.equal task.retries, 1
+      else if numCalls is 2
+        assert !willRetry, 'should not retry'
+        assert.equal task.retries, 2
+        task.retry (error) -> assert.ifError error
+      else
+        assert false, 'unexpected failed event'
+
+
 
 
 
