@@ -241,16 +241,16 @@ class Queue extends EventEmitter
     delete @active[task.id]
     task.state = 'failed'
     task.error = error.message
-    willRetry = (++task.retries > task.options.retries and task.options.retries isnt -1)
+    willRetry = !(++task.retries > task.options.retries and task.options.retries isnt -1)
     @server.broadcastEvent 'task failed', task.toRPC(), willRetry
     if willRetry
-      @failed.push task
-    else
       task.state = 'waiting'
       task.error = null
       @server.broadcastEvent 'task queued', task.toRPC()
       @waiting.push task
       setImmediate => @process()
+    else
+      @failed.push task
     @putTask task
 
   taskProgress: (task, percent) ->
