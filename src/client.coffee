@@ -3,6 +3,7 @@
 async = require 'async'
 dnode = require 'dnode'
 multiplex = require 'multiplex'
+through = require 'through'
 WebSocket = require 'websocket-stream'
 
 {EventEmitter} = require 'events'
@@ -89,11 +90,26 @@ class Client extends EventEmitter
         error.message = "Unable to parse event stream: #{ error.message }"
         @emit 'error', error
         return
-      [type] = event.event.split ' '
-      if type is 'task'
-        event.args[0] = Task.fromRPC event.args[0]
-        event.args[0].client = this
-      @emit event.event, event.args...
+      if @listenerCount(event.event) > 0
+        [type] = event.event.split ' '
+        if type is 'task' and @listenerCount event.event
+          [task, extra...] = event.args
+          task = Task.fromRPC task
+          task.client = this
+          @emit event.event, task, extra...
+        else
+          @emit event.event, event.args...
+      if @eventProxy?
+        @eventProxy.write event
+      return
+
+  getEventStream: ->
+    unless @eventProxy?
+      @eventProxy = through()
+    unless @subscribed
+      @subscribed = true
+      @setupEvents() if @remote?
+    return @eventProxy
 
   onError: (error) => @emit 'error', error
 
