@@ -226,11 +226,11 @@ class Queue extends EventEmitter
 
   sanityCheck: (method, task) ->
     unless @active[task.id]?
-      @emit 'error', new Error "#{ method } - Task #{ task.id } not active"
+      @server.emit 'error', new Error "#{ method } - Task #{ task.id } not active"
       return false
     activeWorker = @active[task.id].workerId
     if activeWorker isnt task.workerId
-      @emit 'error', new Error "#{ method } - Wrong worker, got #{ task.workerId } expected #{ activeWorker }"
+      @server.emit 'error', new Error "#{ method } - Wrong worker, got #{ task.workerId } expected #{ activeWorker }"
       return false
     return true
 
