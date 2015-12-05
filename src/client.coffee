@@ -11,6 +11,9 @@ WebSocket = require 'websocket-stream'
 {Stream} = require 'stream'
 {randomString} = require './common'
 
+# workaround for browsers where not all streams will inherit from browserifys Stream class
+# TODO: more robust stream detection
+isStream = (value) -> value instanceof Stream or value.readable is true
 
 class Client extends EventEmitter
 
@@ -164,7 +167,7 @@ class Client extends EventEmitter
     streams = []
     do walk = (data) ->
       for key, value of data
-        if value instanceof Stream
+        if isStream value
           id = randomString 24
           data[key] = {__stream: id}
           streams.push {id, value}
