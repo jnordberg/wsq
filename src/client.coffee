@@ -3,8 +3,8 @@
 async = require 'async'
 dnode = require 'dnode'
 multiplex = require 'multiplex'
-through = require 'through'
 WebSocket = require 'websocket-stream'
+{PassThrough} = require 'stream'
 
 {EventEmitter} = require 'events'
 {Worker} = require './worker'
@@ -105,7 +105,7 @@ class Client extends EventEmitter
 
   getEventStream: ->
     unless @eventProxy?
-      @eventProxy = through()
+      @eventProxy = new PassThrough {objectMode: true}
     unless @subscribed
       @subscribed = true
       @setupEvents() if @remote?

@@ -4,9 +4,9 @@ async = require 'async'
 dnode = require 'dnode'
 levelup = require 'levelup'
 multiplex = require 'multiplex'
-through = require 'through'
 WebSocket = require 'websocket-stream'
 {EventEmitter} = require 'events'
+{PassThrough} = require 'stream'
 {randomString} = require './common'
 {Task} = require './task'
 
@@ -71,7 +71,7 @@ class Server extends EventEmitter
     @queues = {}
     @connections = {}
 
-    @eventStream = through()
+    @eventStream = new PassThrough {autoDestroy: false}
 
     @restoreQueues =>
       @socketServer = new WebSocket.Server options.socketOptions
@@ -409,7 +409,7 @@ class Connection extends EventEmitter
         source.on 'error', (error) -> stream.destroy error
         source.pipe stream
       when 'events'
-        @server.eventStream.pipe stream, {end: false}
+        @server.eventStream.pipe stream
       else
         @emit 'error', new Error "Can't handle stream type #{ type }"
 
