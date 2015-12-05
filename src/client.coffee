@@ -148,19 +148,20 @@ class Client extends EventEmitter
 
   resolveStreams: (data) ->
     streams = []
-    do walk = (data) =>
-      for key, value of data
-        if value.__stream?
+    walk = (d) =>
+      for key, value of d
+        if value?.__stream?
           id = value.__stream
           stream = @multiplex.createStream 'read:' + id
           @activeStreams[id] = stream
           stream.on 'error', => delete @activeStreams[id]
           stream.on 'end', => delete @activeStreams[id]
-          data[key] = stream
+          d[key] = stream
           streams.push stream
         else if typeof value is 'object'
           walk value
       return
+    walk data
     return streams
 
   encodeStreams: (data) ->
