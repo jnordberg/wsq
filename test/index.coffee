@@ -357,3 +357,15 @@ describe 'task', ->
         task.retry (error) -> assert.ifError error
       else
         assert false, 'unexpected failed event'
+
+  it 'should retrieve data', (done) ->
+    queue = client.queue 'test10'
+    queue.completed (error, tasks) ->
+      assert.ifError error
+      assert.equal tasks.length, 1
+      [task] = tasks
+      assert !task.data?
+      task.getData (error, data) ->
+        assert.ifError error
+        assert.deepEqual data, {foo: 1}
+        done()

@@ -71,6 +71,9 @@ class Task extends EventEmitter
   retry: (callback) ->
     @client.retryTask this, callback
 
+  getData: (callback) ->
+    @client.getTaskData this, callback
+
   toRPC: (includeData=false) ->
     ### Private, used to serialize the task before it is sent over the wire. ###
     rv = {@id, @queue, @options, @retries, @state}

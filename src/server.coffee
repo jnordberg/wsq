@@ -198,6 +198,20 @@ class Queue extends EventEmitter
     tasks = tasks.concat @getCompleted()
     return tasks
 
+  findTask: (taskId) ->
+    return @active[taskId] if @active[taskId]?
+    task = null
+    for type in ['waiting', 'failed', 'completed']
+      task = @[type].find (t) -> t.id is taskId
+      break if task?
+    return task
+
+  getTaskData: (task) ->
+    task = @findTask task.id
+    unless task?
+      throw new Error "No task with id #{ task.id } in queue #{ @name }"
+    return task.data
+
   putTask: (task, callback=@emitError) ->
     @server.database.put task.id, task.toDB(), callback
 
@@ -328,6 +342,7 @@ class Connection extends EventEmitter
 
   RPC_METHODS = [
     'addTask'
+    'getTaskData'
     'listQueues'
     'listTasks'
     'registerWorker'
@@ -433,6 +448,13 @@ class Connection extends EventEmitter
     task = Task.fromRPC task
     queue = @server.getQueue task.queue
     queue.retryTask task, callback
+
+  getTaskData: (task, callback) ->
+    queue = @server.getQueue task.queue
+    try
+      data = queue.getTaskData {id: task.id}
+    catch error
+    callback error, data
 
   listTasks: (queue, filter, callback) ->
     queue = @server.getQueue queue
