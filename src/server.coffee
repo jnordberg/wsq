@@ -394,7 +394,7 @@ class Connection extends EventEmitter
         source.on 'error', (error) -> stream.destroy error
         source.pipe stream
       when 'events'
-        @server.eventStream.pipe stream
+        @server.eventStream.pipe stream, {end: false}
       else
         @emit 'error', new Error "Can't handle stream type #{ type }"
 
