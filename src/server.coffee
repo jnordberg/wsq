@@ -391,7 +391,7 @@ class Connection extends EventEmitter
 
   heartbeat: =>
     if @pingCounter >= 2
-      @stream.end()
+      @stream.destroy new Error 'Ping timeout'
     else
       @stream.socket.ping null, null, true
       @pingCounter++

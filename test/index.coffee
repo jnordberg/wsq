@@ -38,12 +38,19 @@ describe 'server', ->
 
   it 'should close stream if client does not respond to ping', (done) ->
     @slow 800
+    sawError = false
+    server.once 'connection', (conn) ->
+      conn.on 'error', (error) ->
+        assert error?, 'should have error'
+        assert.equal error.message, 'Ping timeout'
+        sawError = true
     cli = new Client 'ws://localhost:4242'
     cli.on 'connect', ->
       pongs = 0
       cli.socket.socket.pong = -> pongs++
       cli.on 'disconnect', ->
         assert.equal pongs, 2
+        assert sawError, 'should have seen error'
         cli.close()
         done()
 
