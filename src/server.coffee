@@ -380,6 +380,7 @@ class Connection extends EventEmitter
     @emit 'close'
 
   cleanup: ->
+    @multiplex.end()
     clearTimeout @heartbeatTimer
     for workerId, queueName of @seenWorkers
       @server.getQueue(queueName).removeWorker(workerId)
