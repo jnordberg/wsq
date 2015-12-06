@@ -25386,6 +25386,7 @@ Client = (function(superClass) {
     }
     this.errorCallback = bind(this.errorCallback, this);
     this.onError = bind(this.onError, this);
+    this.connect = bind(this.connect, this);
     this.ready = false;
     this.workers = [];
     this.queues = {};
@@ -25402,23 +25403,24 @@ Client = (function(superClass) {
 
   Client.prototype.connect = function() {
     var rpcStream;
-    this.closed = false;
+    this._closed = false;
     if (this.socket != null) {
-      throw new Error('Already connected!');
+      return;
     }
+    clearTimeout(this._connectTimer);
     this.socket = new WebSocket(this.address);
     this.socket.on('close', (function(_this) {
       return function() {
-        var delay, wasOpen;
-        wasOpen = _this.remote != null;
+        var delay, wasConnected;
+        wasConnected = _this.remote != null;
         _this.socket = null;
         _this.remote = null;
-        if (wasOpen) {
-          _this.onDisconnect();
-        }
-        if (!_this.closed) {
+        if (!_this._closed) {
           delay = _this.options.backoff(_this.connectionTries++);
-          return setTimeout(_this.connect.bind(_this), delay);
+          _this._connectTimer = setTimeout(_this.connect, delay);
+        }
+        if (wasConnected) {
+          return _this.onDisconnect();
         }
       };
     })(this));
@@ -25444,17 +25446,14 @@ Client = (function(superClass) {
   };
 
   Client.prototype.close = function() {
-    var ref, wasOpen;
-    this.closed = true;
-    if ((ref = this.socket) != null) {
-      ref.end();
+    this._closed = true;
+    clearTimeout(this._connectTimer);
+    if (this.socket == null) {
+      return;
     }
-    wasOpen = this.socket != null;
+    this.socket.end();
     this.remote = null;
-    this.socket = null;
-    if (wasOpen) {
-      return this.onDisconnect();
-    }
+    return this.onDisconnect();
   };
 
   Client.prototype.onConnect = function() {
