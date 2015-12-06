@@ -75,6 +75,21 @@ describe 'client', ->
         assert.equal queues[0].name, 'listme'
         done()
 
+  it 'should receive event stream', (done) ->
+    c = new Client 'ws://localhost:4242'
+    q = c.queue 'evtstrm'
+    s = c.getEventStream()
+    sawData = false
+    s.on 'data', (data) ->
+      return unless data.args[0].queue is 'evtstrm'
+      assert.equal data.args[0].id, t.id
+      sawData = true
+    t = q.add {foo: 'bark'}, ->
+      assert sawData, 'should have seen data'
+      c.socket.on 'end', ->
+        client.queue('evtstrm').add {foo: 'nark'}, done
+      c.close()
+
 describe 'queue', ->
 
   it 'adds a task', (done) ->
