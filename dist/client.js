@@ -25577,7 +25577,10 @@ Client = (function(superClass) {
             return callback = null;
           }
         };
-        destination = _this.multiplex.createStream('write:' + stream.id);
+        destination = _this.multiplex.createStream('write:' + stream.id, {
+          chunked: true,
+          halfOpen: true
+        });
         _this.activeStreams[stream.id] = stream.value;
         stream.value.on('error', callbackOnce);
         stream.value.on('end', callbackOnce);
@@ -25661,7 +25664,10 @@ Client = (function(superClass) {
           value = d[key];
           if ((value != null ? value.__stream : void 0) != null) {
             id = value.__stream;
-            stream = _this.multiplex.createStream('read:' + id);
+            stream = _this.multiplex.createStream('read:' + id, {
+              chunked: true,
+              halfOpen: true
+            });
             _this.activeStreams[id] = stream;
             stream.on('error', function() {
               return delete _this.activeStreams[id];
