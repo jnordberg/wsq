@@ -26,3 +26,19 @@ clean:
 	rm -rf lib
 	rm -rf coverage
 
+.PHONY: publish
+publish:
+	@set -e ;\
+	current_version=$$(node -e 'console.log(require("./package").version)') ;\
+	read -r -p "New version (current $$current_version): " version ;\
+	node -e "p=require('./package');p.version='$$version';console.log(JSON.stringify(p, null, 2))" > package_tmp.json ;\
+	make client ;\
+	while [ -z "$$really" ]; do \
+		read -r -p "Publish as version $$version? [y/N]: " really ;\
+	done ;\
+	[ $$really = "y" ] || [ $$really = "Y" ] || (echo "Nevermind then."; exit 1;) ;\
+	mv package_tmp.json package.json ;\
+	git add dist/ package.json ;\
+	git commit -m $$version ;\
+	git tag $$version ;\
+	npm publish
