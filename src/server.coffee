@@ -383,6 +383,9 @@ class Connection extends EventEmitter
     clearTimeout @heartbeatTimer
     for workerId, queueName of @seenWorkers
       @server.getQueue(queueName).removeWorker(workerId)
+    if @_eventStream?
+      @server.eventStream.unpipe @_eventStream
+      @_eventStream = null
 
   heartbeat: =>
     if @pingCounter >= 2
@@ -409,6 +412,7 @@ class Connection extends EventEmitter
         source.on 'error', (error) -> stream.destroy error
         source.pipe stream
       when 'events'
+        @_eventStream = stream
         @server.eventStream.pipe stream
       else
         @emit 'error', new Error "Can't handle stream type #{ type }"
