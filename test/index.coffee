@@ -66,9 +66,6 @@ describe 'client', ->
     client.connect()
     client.once 'connect', -> done()
 
-  it 'throws if already connected', ->
-    assert.throws -> client.connect()
-
   it 'should list active queues', (done) ->
     client.queue('listme').add {foo: 1}, (error) ->
       assert.ifError error

@@ -37,18 +37,19 @@ class Client extends EventEmitter
     @connectionTries = 0
     @connect()
 
-  connect: ->
-    @closed = false
-    throw new Error 'Already connected!' if @socket?
+  connect: =>
+    @_closed = false
+    return if @socket?
+    clearTimeout @_connectTimer
     @socket = new WebSocket @address
     @socket.on 'close', =>
-      wasOpen = @remote?
+      wasConnected = @remote?
       @socket = null
       @remote = null
-      @onDisconnect() if wasOpen
-      unless @closed
+      unless @_closed
         delay = @options.backoff @connectionTries++
-        setTimeout @connect.bind(this), delay
+        @_connectTimer = setTimeout @connect, delay
+      @onDisconnect() if wasConnected
     @socket.on 'error', (error) => @emit 'error', error
     @rpc = dnode null, {weak: false}
     @rpc.on 'remote', (remote) =>
@@ -61,12 +62,12 @@ class Client extends EventEmitter
     rpcStream.pipe(@rpc).pipe(rpcStream)
 
   close: ->
-    @closed = true
-    @socket?.end()
-    wasOpen = @socket?
+    @_closed = true
+    clearTimeout @_connectTimer
+    return unless @socket?
+    @socket.end()
     @remote = null
-    @socket = null
-    @onDisconnect() if wasOpen
+    @onDisconnect()
 
   onConnect: ->
     async.forEach @getFreeWorkers(), (worker, callback) =>
