@@ -139,7 +139,7 @@ class Client extends EventEmitter
         if callback?
           callback error
           callback = null
-      destination = @multiplex.createStream 'write:' + stream.id
+      destination = @multiplex.createStream 'write:' + stream.id, {chunked: true, halfOpen: true}
       @activeStreams[stream.id] = stream.value
       stream.value.on 'error', callbackOnce
       stream.value.on 'end', callbackOnce
@@ -182,7 +182,7 @@ class Client extends EventEmitter
       for key, value of d
         if value?.__stream?
           id = value.__stream
-          stream = @multiplex.createStream 'read:' + id
+          stream = @multiplex.createStream 'read:' + id, {chunked: true, halfOpen: true}
           @activeStreams[id] = stream
           stream.on 'error', => delete @activeStreams[id]
           stream.on 'end', => delete @activeStreams[id]
