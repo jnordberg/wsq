@@ -4,6 +4,7 @@ async = require 'async'
 dnode = require 'dnode'
 levelup = require 'levelup'
 multiplex = require 'multiplex'
+pump = require 'pump'
 WebSocket = require 'websocket-stream'
 {EventEmitter} = require 'events'
 {PassThrough} = require 'stream'
@@ -357,13 +358,14 @@ class Connection extends EventEmitter
     @seenWorkers = {}
     # setup multiplex stream
     @multiplex = multiplex @handleStream.bind(this)
-    @stream.pipe(@multiplex).pipe(@stream)
-    @stream.on 'error', @onError
-    @stream.on 'end', @onEnd
-    # setup rpc stream via multiplex
+    pump @stream, @multiplex, @stream, (error) =>
+      if error? and error.message isnt 'premature close'
+        @onError error
+      else
+        @onEnd()
     rpcStream = @multiplex.createSharedStream 'rpc'
     @rpc = dnode @getRpcMethods(), {weak: false}
-    @rpc.pipe(rpcStream).pipe(@rpc)
+    pump @rpc, rpcStream, @rpc
     if @server.options.heartbeatInterval > 0
       @pingCounter = 0
       @stream.socket.on 'pong', => @pingCounter = 0
@@ -380,7 +382,6 @@ class Connection extends EventEmitter
     @emit 'close'
 
   cleanup: ->
-    @multiplex.end()
     clearTimeout @heartbeatTimer
     for workerId, queueName of @seenWorkers
       @server.getQueue(queueName).removeWorker(workerId)
