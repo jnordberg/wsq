@@ -44,8 +44,9 @@ class Server extends EventEmitter
     # Blob store instance complying to the "abstract-blob-store" interface, see:
     # https://github.com/maxogden/abstract-blob-store
 
-    heartbeatInterval: 1000 # 1 second
+    heartbeatInterval: 5000 # 5 seconds
     # How often to ping clients to keep the connection alive. Set to zero to disable.
+
 
   requiredOptions = ['dbLocation', 'socketOptions', 'blobStore']
 
@@ -397,7 +398,7 @@ class Connection extends EventEmitter
       @_eventStream = null
 
   heartbeat: =>
-    if @pingCounter >= 2
+    if @pingCounter >= 3
       @stream.destroy new Error 'Ping timeout'
     else
       @stream.socket.ping null, null, true
@@ -405,8 +406,10 @@ class Connection extends EventEmitter
 
   getRpcMethods: ->
     rv = {}
-    for methodName in RPC_METHODS
-      rv[methodName] = this[methodName].bind(this)
+    for methodName in RPC_METHODS then do (methodName) =>
+      rv[methodName] = (args...) =>
+        @pingCounter = 0 # TODO: refactor heartbeat to reset on any stream activity
+        this[methodName].apply this, args
     return rv
 
   handleStream: (stream, id) =>

@@ -18,7 +18,7 @@ serverOpts =
   dbLocation: 'nowhere'
   dbOptions: {db}
   socketOptions: {}
-  heartbeatInterval: 100
+  heartbeatInterval: 50
   workerTimeout: 100
 
 makeServer = (port=4242) ->
@@ -50,7 +50,7 @@ describe 'server', ->
       pongs = 0
       cli.socket.socket.pong = -> pongs++
       cli.on 'disconnect', ->
-        assert.equal pongs, 2
+        assert.equal pongs, 3
         assert sawError, 'should have seen error'
         cli.close()
         done()
