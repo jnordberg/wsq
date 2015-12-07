@@ -25926,7 +25926,7 @@ EventEmitter = require('events').EventEmitter;
 
 randomString = require('./common').randomString;
 
-DB_KEYS = ['data', 'id', 'options', 'progress', 'queue', 'retries', 'state', 'workerId', 'error'];
+DB_KEYS = ['data', 'id', 'options', 'progress', 'queue', 'retries', 'state', 'workerId', 'error', 'queueTime'];
 
 Task = (function(superClass) {
   var defaults;
