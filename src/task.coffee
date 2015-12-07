@@ -5,7 +5,8 @@ assert = require 'assert'
 {randomString} = require './common'
 
 DB_KEYS = [
-  'data', 'id', 'options', 'progress', 'queue', 'retries', 'state', 'workerId', 'error'
+  'data', 'id', 'options', 'progress', 'queue',
+  'retries', 'state', 'workerId', 'error', 'queueTime'
 ]
 
 class Task extends EventEmitter

@@ -6,6 +6,7 @@ store = require 'abstract-blob-store'
 {Server} = require './../src/server'
 {Worker} = require './../src/worker'
 
+async = require 'async'
 assert = require 'assert'
 through = require 'through'
 
@@ -323,6 +324,24 @@ describe 'server persitence', ->
       assert.equal queue.getAll().length, 1
       server2.close()
       done()
+
+  it 'keeps the order of tasks', (done) ->
+    queue = client.queue 'persist1'
+    async.map [1..10], ((i, cb) -> queue.add {i}, cb), (error) ->
+      assert.ifError error
+      queue.all (error, tasks1) ->
+        assert.ifError error
+        assert.equal tasks1.length, 10
+        server2 = makeServer 5566
+        server2.once 'ready', ->
+          client2 = new Client 'ws://localhost:5566'
+          queue2 = client2.queue 'persist1'
+          queue2.all (error, tasks2) ->
+            assert.ifError error
+            id1 = tasks1.map (t) -> t.id
+            id2 = tasks2.map (t) -> t.id
+            assert.deepEqual id1, id2
+            done()
 
 describe 'task', ->
 

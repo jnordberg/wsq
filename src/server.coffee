@@ -117,7 +117,11 @@ class Server extends EventEmitter
     stream = @database.createReadStream()
     stream.on 'data', restoreTask
     stream.on 'error', (error) => @emit 'error', error
-    stream.on 'end', callback
+    stream.on 'end', =>
+      for name, queue of @queues
+        for state in ['waiting', 'completed', 'failed']
+          queue[state].sort (a, b) -> a.queueTime - b.queueTime
+      callback()
 
 class Queue extends EventEmitter
 
@@ -229,6 +233,7 @@ class Queue extends EventEmitter
 
   addTask: (task, callback=@emitError) ->
     task.state = 'waiting'
+    task.queueTime = Date.now()
     @putTask task, (error) =>
       if error?
         @emit 'error', error
@@ -259,6 +264,7 @@ class Queue extends EventEmitter
     if task.options.autoremove
       @delTask task
     else
+      task.queueTime = Date.now()
       @putTask task
       @completed.push task
 
@@ -269,6 +275,7 @@ class Queue extends EventEmitter
     delete @active[task.id]
     task.state = 'failed'
     task.error = error.message
+    task.queueTime = Date.now()
     willRetry = !(++task.retries > task.options.retries and task.options.retries isnt -1)
     @server.broadcastEvent 'task failed', task.toRPC(), willRetry
     if willRetry
