@@ -1,6 +1,6 @@
 {
   "name": "wsq",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Task queue on top of websockets",
   "main": "index.js",
   "scripts": {
