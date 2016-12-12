@@ -280,6 +280,11 @@ class ClientQueue
       if task.queue is @name
         handler task, args...
 
+  once: (event, handler) ->
+    @client.once event, (task, args...) =>
+      if task.queue is @name
+        handler task, args...
+
   process: (processFn) ->
     worker = Worker.create @name, processFn
     @client.addWorker worker
