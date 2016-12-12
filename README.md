@@ -1,7 +1,7 @@
 
 # wsq [![Build Status](https://travis-ci.org/jnordberg/wsq.svg)](https://travis-ci.org/jnordberg/wsq) [![Coverage Status](https://coveralls.io/repos/jnordberg/wsq/badge.svg?branch=master&service=github)](https://coveralls.io/github/jnordberg/wsq?branch=master) [![Package Version](https://img.shields.io/npm/v/wsq.svg)](https://www.npmjs.com/package/wsq) ![License](https://img.shields.io/npm/l/wsq.svg)
 
-Websocket task queue - [DEMO](http://wsq.rocks)
+Websocket task queue
 
 
 What is it?
@@ -15,7 +15,7 @@ Example
 
 Video encoding
 
-server.js (see the [wsq-server](https://github.com/jnordberg/wsq-server) for a standalone server with logging)
+server.js (see [wsq-server](https://github.com/jnordberg/wsq-server) for a standalone server with logging)
 ```javascript
 var Server = require('wsq/server')
 var leveldown = require('leveldown')
