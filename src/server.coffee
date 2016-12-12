@@ -11,11 +11,10 @@ WebSocket = require 'websocket-stream'
 {randomString} = require './common'
 {Task} = require './task'
 
-
-microtime = ->
-  [s, ns] = process.hrtime microtime.start.hr
-  return microtime.start.ts + s * 1e6 + ~~(ns / 1e3)
-microtime.start = {ts: Date.now() * 1000, hr: process.hrtime()}
+hrnow = ->
+  [s, ns] = process.hrtime hrnow.start.hr
+  return hrnow.start.ts + s * 1e3 + ns / 1e6
+hrnow.start = {ts: Date.now(), hr: process.hrtime()}
 
 resolveStreamIds = (data) ->
   rv = []
@@ -240,7 +239,7 @@ class Queue extends EventEmitter
 
   addTask: (task, callback=@emitError) ->
     task.state = 'waiting'
-    task.queueTime = microtime()
+    task.queueTime = hrnow()
     @putTask task, (error) =>
       if error?
         @emit 'error', error
@@ -271,7 +270,7 @@ class Queue extends EventEmitter
     if task.options.autoremove
       @delTask task
     else
-      task.queueTime = microtime()
+      task.queueTime = hrnow()
       @putTask task
       @completed.push task
 
@@ -282,7 +281,7 @@ class Queue extends EventEmitter
     delete @active[task.id]
     task.state = 'failed'
     task.error = error.message
-    task.queueTime = microtime()
+    task.queueTime = hrnow()
     willRetry = !(++task.retries > task.options.retries and task.options.retries isnt -1)
     @server.broadcastEvent 'task failed', task.toRPC(), willRetry
     if willRetry
