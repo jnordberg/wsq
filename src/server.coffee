@@ -86,8 +86,8 @@ class Server extends EventEmitter
       @socketServer.on 'stream', @handleConnection
       @emit 'ready'
 
-  close: ->
-    @socketServer.close()
+  close: (callback) ->
+    @socketServer?.close callback
 
   broadcastEvent: (event, args...) ->
     @emit event, args...
