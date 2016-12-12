@@ -235,7 +235,7 @@ describe 'queue', ->
     srv2 = makeServer 5252
     cli2 = new Client 'ws://localhost:5252'
     cli2.on 'error', (error) ->
-      assert.equal error.code, 'ECONNREFUSED'
+      assert error.code is 'ECONNREFUSED' or error.code is 'ECONNRESET'
     cli2.on 'connect', ->
       queue = cli2.queue 'test6'
       stream = through()
@@ -322,8 +322,7 @@ describe 'server persitence', ->
     server2.once 'ready', ->
       queue = server.getQueue 'test1'
       assert.equal queue.getAll().length, 1
-      server2.close()
-      done()
+      server2.close done
 
   it 'keeps the order of tasks', (done) ->
     queue = client.queue 'persist1'
