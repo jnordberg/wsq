@@ -324,6 +324,30 @@ describe 'server persitence', ->
       assert.equal queue.getAll().length, 1
       server2.close done
 
+  it 'perists and resumes active tasks', (done) ->
+    @slow 200
+    server2 = makeServer 5253
+    client2 = new Client 'ws://localhost:5253', {backoff: -> 10}
+
+    sawError = false
+    client2.on 'error', (error) -> sawError = true
+
+    numConnects = 0
+    client2.on 'connect', -> numConnects++
+
+    queue = client2.queue 'persist2'
+    queue.once 'worker started', ->
+      server2.close ->
+        server2 = makeServer 5253
+    queue.process (task, callback) ->
+      setTimeout callback, 50
+
+    task = queue.add {foo: 'bar'}
+    task.on 'completed', ->
+      assert sawError, 'should see connection errors on client'
+      assert.equal numConnects, 2
+      do done
+
   it 'keeps the order of tasks', (done) ->
     queue = client.queue 'persist1'
     async.map [1..10], ((i, cb) -> queue.add {i}, cb), (error) ->
